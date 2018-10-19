@@ -17,7 +17,7 @@
         <Transport>BuiltinShortcut</Transport>
       </RemoteHost>
       <Command>mbed</Command>
-      <Arguments>compile --profile mbed-os\tools\profiles\debug.json -v</Arguments>
+      <Arguments>compile --profile mbed-os\tools\profiles\debug.json -v -t GCC_ARM -m UBLOX_EVK_NINA_B1</Arguments>
       <WorkingDirectory>$(ProjectDir)</WorkingDirectory>
       <Environment>
         <Records>
@@ -59,7 +59,7 @@
       <BackgroundMode xsi:nil="true" />
     </CleanCommand>
     <MainBuildDirectory>$(ProjectDir)</MainBuildDirectory>
-    <AbsoluteTargetPath>$(ProjectDir)\BUILD\NRF52_DK\GCC_ARM\blinder-ctrl.elf</AbsoluteTargetPath>
+    <AbsoluteTargetPath>$(ProjectDir)\BUILD\UBLOX_EVK_NINA_B1\GCC_ARM\blinder-ctrl.elf</AbsoluteTargetPath>
     <AutoUpdateMakefiles>false</AutoUpdateMakefiles>
   </Build>
   <Debug xsi:type="com.visualgdb.debug.embedded">
@@ -122,7 +122,7 @@
         </KeyValue>
         <KeyValue>
           <Key>com.sysprogs.jlink.resetafterload</Key>
-          <Value />
+          <Value>mon reset</Value>
         </KeyValue>
         <KeyValue>
           <Key>com.sysprogs.jlink.program</Key>
