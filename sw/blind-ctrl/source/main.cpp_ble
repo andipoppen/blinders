@@ -31,7 +31,7 @@ InterruptIn hallSensorIn(A5); // NINA_B1_GPIO_16
 
 bool doBlink = true;
 
-const static char     DEVICE_NAME[] = "Blinders";
+const static char     DEVICE_NAME[] = "Blinds";
 static const uint16_t uuid16_list[] = {LEDService::LED_SERVICE_UUID};
 
 static EventQueue eventQueue(

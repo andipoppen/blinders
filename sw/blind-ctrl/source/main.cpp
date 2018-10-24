@@ -5,7 +5,7 @@
 #include <events/mbed_events.h>
 #include <mbed.h>
 #include "ble/BLE.h"
-#include "BlinderService.h"
+#include "BlindService.h"
 #include "DataStorage.h"
 
 DataStorage ds;
@@ -24,8 +24,8 @@ int numstep = (4076/8)/10; // defines full turn of 360 degree
 
 static int32_t _position = 0; // This is the position where the HALL effekt magnetic sensor is triggered
 static int32_t _upPosition = DEFAULT_UP_POSITION; // Slighlty below the HALL effect sensor
-static int32_t _bottomPosition = DEFAULT_DOWN_POSITION; // Bottom position of the blinder
-static int32_t _topPosition = -DEFAULT_DOWN_POSITION*2 - DEFAULT_UP_POSITION; // Top position of the blinder. Can actually not go all the way but to make calibration possible from the bottom position
+static int32_t _bottomPosition = DEFAULT_DOWN_POSITION; // Bottom position of the blind
+static int32_t _topPosition = -DEFAULT_DOWN_POSITION*2 - DEFAULT_UP_POSITION; // Top position of the blind. Can actually not go all the way but to make calibration possible from the bottom position
 
 void handleHallSensorFall();
 
@@ -33,14 +33,14 @@ DigitalOut actuatedLED(LED1, 0);
 
 InterruptIn hallSensorIn(A5); // NINA_B1_GPIO_16
 
-const static char     DEVICE_NAME[] = "Blinders";
-static const uint16_t uuid16_list[] = { BlinderService::BLINDER_SERVICE_UUID };
+const static char     DEVICE_NAME[] = "Blinds";
+static const uint16_t uuid16_list[] = { BlindService::BLIND_SERVICE_UUID };
 
 static EventQueue eventQueue(
     /* event count */10 * /* event size */ 32
     );
 
-BlinderService *blinderServicePtr;
+BlindService *blindServicePtr;
 
 
 PinDetect pin(SW1);
@@ -89,14 +89,14 @@ void stepMotorDown()
 static void decrease_position()
 {
     _position -= numstep;
-    ble->gattServer().write(blinderServicePtr->getValueHandlePos(), (uint8_t*)&_position, 4);
+    ble->gattServer().write(blindServicePtr->getValueHandlePos(), (uint8_t*)&_position, 4);
     printf("Pos = %d\n", _position);
 }
 
 static void increase_position()
 {
     _position += numstep;
-    ble->gattServer().write(blinderServicePtr->getValueHandlePos(), (uint8_t*)&_position, 4);
+    ble->gattServer().write(blindServicePtr->getValueHandlePos(), (uint8_t*)&_position, 4);
     printf("Pos = %d\n", _position);
 }
 
@@ -172,7 +172,7 @@ void blinkCallback(void)
 }
 /*
 void onDataReadCallback(const GattReadCallbackParams *params) {
-    if ((params->handle == blinderServicePtr->getValueHandlePos())) {
+    if ((params->handle == blindServicePtr->getValueHandlePos())) {
         
     }
 }
@@ -184,10 +184,10 @@ void onDataReadCallback(const GattReadCallbackParams *params) {
 *     Information about the characterisitc being updated.
 */
 void onDataWrittenCallback(const GattWriteCallbackParams *params) {
-    if ((params->handle == blinderServicePtr->getValueHandleCmd()) && (params->len == 1)) {
+    if ((params->handle == blindServicePtr->getValueHandleCmd()) && (params->len == 1)) {
         switch (*(params->data))
         {
-        case BlinderService::BLINDER_CMD_UP:
+        case BlindService::BLIND_CMD_UP:
             switch (_state)
             {
             case IdleBottom:
@@ -198,7 +198,7 @@ void onDataWrittenCallback(const GattWriteCallbackParams *params) {
                 break;
             }
             break;
-        case BlinderService::BLINDER_CMD_DOWN:
+        case BlindService::BLIND_CMD_DOWN:
             switch (_state)
             {
             case IdleTop:
@@ -210,7 +210,7 @@ void onDataWrittenCallback(const GattWriteCallbackParams *params) {
                 break;
             }
             break;
-        case BlinderService::BLINDER_CMD_TOGGLE:
+        case BlindService::BLIND_CMD_TOGGLE:
             switch (_state)
             {
             case IdleTop:
@@ -228,19 +228,19 @@ void onDataWrittenCallback(const GattWriteCallbackParams *params) {
                 break;
             }
             break;
-        case BlinderService::BLINDER_CMD_UP_CALIBRATE:
+        case BlindService::BLIND_CMD_UP_CALIBRATE:
             _upPosition = DEFAULT_UP_POSITION; // Stop at default up position
             enterGoing2Top();
             break;
-        case BlinderService::BLINDER_CMD_DOWN_CALIBRATE:
+        case BlindService::BLIND_CMD_DOWN_CALIBRATE:
             _bottomPosition = DEFAULT_DOWN_CALIBRATE_POSITION; // Big enough value to make it go down all the way
             SET_STATE(Going2Bottom);
             break;
-        case BlinderService::BLINDER_CMD_SET_UP_POS:
+        case BlindService::BLIND_CMD_SET_UP_POS:
             _upPosition = _position;
             SET_STATE(IdleTop);
             break;
-        case BlinderService::BLINDER_CMD_SET_BOTTOM_POS:
+        case BlindService::BLIND_CMD_SET_BOTTOM_POS:
             _bottomPosition = _position;
             SET_STATE(IdleBottom);
             break;
@@ -283,9 +283,9 @@ void bleInitComplete(BLE::InitializationCompleteCallbackContext *params)
     ble.gattServer().onDataWritten(onDataWrittenCallback);
    // ble.gattServer().onDataRead(onDataReadCallback);
 
-    bool initialValueForBlinderCharacteristic = false;
-    uint32_t initialValueForBlinderCharacteristicPos = 0;
-    blinderServicePtr = new BlinderService(ble, initialValueForBlinderCharacteristic, initialValueForBlinderCharacteristicPos);
+    bool initialValueForBlindCharacteristic = false;
+    uint32_t initialValueForBlindCharacteristicPos = 0;
+    blindServicePtr = new BlindService(ble, initialValueForBlindCharacteristic, initialValueForBlindCharacteristicPos);
 
     /* setup advertising */
     ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::BREDR_NOT_SUPPORTED | GapAdvertisingData::LE_GENERAL_DISCOVERABLE);
