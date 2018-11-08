@@ -6,11 +6,11 @@
 #include <mbed.h>
 #include "ble/BLE.h"
 #include "BlindService.h"
-#include "DataStorage.h"
+//#include "DataStorage.h"
 
-DataStorage ds;
+//DataStorage ds;
 DigitalOut ledR(D9);
-BLE* ble = 0;
+BLE* myBle = 0;
 
 sMotor motor(D13, D11, D12, D10); // creates new stepper motor: IN1, IN2, IN3, IN4
 
@@ -89,14 +89,14 @@ void stepMotorDown()
 static void decrease_position()
 {
     _position -= numstep;
-    ble->gattServer().write(blindServicePtr->getValueHandlePos(), (uint8_t*)&_position, 4);
+    myBle->gattServer().write(blindServicePtr->getValueHandlePos(), (uint8_t*)&_position, 4);
     printf("Pos = %d\n", _position);
 }
 
 static void increase_position()
 {
     _position += numstep;
-    ble->gattServer().write(blindServicePtr->getValueHandlePos(), (uint8_t*)&_position, 4);
+    myBle->gattServer().write(blindServicePtr->getValueHandlePos(), (uint8_t*)&_position, 4);
     printf("Pos = %d\n", _position);
 }
 
@@ -265,41 +265,41 @@ void onBleInitError(BLE &ble, ble_error_t error)
 */
 void bleInitComplete(BLE::InitializationCompleteCallbackContext *params)
 {
-    BLE&        ble = params->ble;
+    BLE&        myBle = params->ble;
     ble_error_t error = params->error;
 
     if (error != BLE_ERROR_NONE) {
         /* In case of error, forward the error handling to onBleInitError */
-        onBleInitError(ble, error);
+        onBleInitError(myBle, error);
         return;
     }
 
     /* Ensure that it is the default instance of BLE */
-    if (ble.getInstanceID() != BLE::DEFAULT_INSTANCE) {
+    if (myBle.getInstanceID() != BLE::DEFAULT_INSTANCE) {
         return;
     }
 
-    ble.gap().onDisconnection(disconnectionCallback);
-    ble.gattServer().onDataWritten(onDataWrittenCallback);
-   // ble.gattServer().onDataRead(onDataReadCallback);
+    myBle.gap().onDisconnection(disconnectionCallback);
+    myBle.gattServer().onDataWritten(onDataWrittenCallback);
+   // myBle.gattServer().onDataRead(onDataReadCallback);
 
     bool initialValueForBlindCharacteristic = false;
     uint32_t initialValueForBlindCharacteristicPos = 0;
-    blindServicePtr = new BlindService(ble, initialValueForBlindCharacteristic, initialValueForBlindCharacteristicPos);
+    blindServicePtr = new BlindService(myBle, initialValueForBlindCharacteristic, initialValueForBlindCharacteristicPos);
 
     /* setup advertising */
-    ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::BREDR_NOT_SUPPORTED | GapAdvertisingData::LE_GENERAL_DISCOVERABLE);
-    ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LIST_16BIT_SERVICE_IDS, (uint8_t *)uuid16_list, sizeof(uuid16_list));
-    ble.gap().accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LOCAL_NAME, (uint8_t *)DEVICE_NAME, sizeof(DEVICE_NAME));
-    ble.gap().setAdvertisingType(GapAdvertisingParams::ADV_CONNECTABLE_UNDIRECTED);
-    ble.gap().setAdvertisingInterval(1000); /* 1000ms. */
-    ble.gap().startAdvertising();
+    myBle.gap().accumulateAdvertisingPayload(GapAdvertisingData::BREDR_NOT_SUPPORTED | GapAdvertisingData::LE_GENERAL_DISCOVERABLE);
+    myBle.gap().accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LIST_16BIT_SERVICE_IDS, (uint8_t *)uuid16_list, sizeof(uuid16_list));
+    myBle.gap().accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LOCAL_NAME, (uint8_t *)DEVICE_NAME, sizeof(DEVICE_NAME));
+    myBle.gap().setAdvertisingType(GapAdvertisingParams::ADV_CONNECTABLE_UNDIRECTED);
+    myBle.gap().setAdvertisingInterval(1000); /* 1000ms. */
+    myBle.gap().startAdvertising();
     
 }
 
 void scheduleBleEventsProcessing(BLE::OnEventsToProcessCallbackContext* context) {
-    BLE &ble = BLE::Instance();
-    eventQueue.call(Callback<void()>(&ble, &BLE::processEvents));
+    BLE &myBle = BLE::Instance();
+    eventQueue.call(Callback<void()>(&myBle, &BLE::processEvents));
 }
 
 void enterGoing2Top()
@@ -344,9 +344,9 @@ int main()
     printf("Start\n");
 
 
-    ble = &(BLE::Instance());
-    ble->onEventsToProcess(scheduleBleEventsProcessing);
-    ble->init(bleInitComplete);
+    myBle = &(BLE::Instance());
+    myBle->onEventsToProcess(scheduleBleEventsProcessing);
+    myBle->init(bleInitComplete);
 
     hallSensorIn.mode(PullUp);
     hallSensorIn.fall(&handleHallSensorFall);
